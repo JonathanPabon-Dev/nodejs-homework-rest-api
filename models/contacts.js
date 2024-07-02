@@ -1,9 +1,8 @@
-const contactSchema = require('../db/schemas');
+const contactSchema = require('../schemas/contact.schema');
 
 const listContacts = async () => {
   try {
-    const contacts = await contactSchema.find();
-
+    const contacts = await contactSchema.find().exec();
     return contacts;
   } catch (err) {
     console.error(err, 'An error happened! (list contacts)');
@@ -50,7 +49,7 @@ const updateContact = async (contactId, body) => {
   }
 };
 
-const updateFavoriteStatus = async (contactId, body) => {
+const updateStatusContact = async (contactId, body) => {
   try {
     return await contactSchema.findByIdAndUpdate(contactId, body).exec();
   } catch (err) {
@@ -65,5 +64,5 @@ module.exports = {
   removeContact,
   addContact,
   updateContact,
-  updateFavoriteStatus,
+  updateStatusContact,
 };

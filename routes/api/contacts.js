@@ -1,5 +1,5 @@
 const express = require('express');
-const contacts = require('../../models/contacts.js');
+const contacts = require('../../models/contacts');
 const joi = require('joi');
 
 const router = express.Router();
@@ -30,6 +30,7 @@ function validateContact(req, res, next) {
 
 router.get('/', async (req, res, next) => {
   try {
+    console.log('get method start');
     const contactList = await contacts.listContacts();
 
     return res.status(200).json({
@@ -67,16 +68,15 @@ router.post('/', validateContact, async (req, res, next) => {
     }
 
     const contact = {
-      id: `ID-${phone}`,
       name,
       email,
       phone,
     };
 
-    await contacts.addContact(contact);
+    const contactAdded = await contacts.addContact(contact);
 
     return res.status(201).json({
-      data: { contact },
+      data: { contactAdded },
     });
   } catch (err) {
     next(err);
@@ -125,6 +125,29 @@ router.put('/:contactId', validateContact, async (req, res, next) => {
 
     return res.status(200).json({
       mensaje: 'Contact updated',
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.patch('/api/contacts/:contactId/favorite', async (req, res, next) => {
+  try {
+    const contactId = req.params.contactId;
+    const favorite = req.body.favorite;
+
+    if (!favorite) {
+      return res.status(400).json({ message: 'Missing field favorite' });
+    }
+
+    const contactUpdated = await contacts.updateStatusContact(
+      contactId,
+      favorite
+    );
+
+    return res.status(200).json({
+      mensaje: 'Contact updated',
+      data: { contactUpdated },
     });
   } catch (err) {
     next(err);
