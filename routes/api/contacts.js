@@ -1,25 +1,24 @@
 const express = require('express');
 const contacts = require('../../models/contacts.js');
-const { nanoid } = require('nanoid');
 const joi = require('joi');
 
 const router = express.Router();
-const addContactSchema = joi.object({
+
+const contactSchema = joi.object({
   name: joi.string().min(3).max(30).required(),
-  email: joi.string().email().required(),
-  phone: joi.string().min(9).max(15).required(),
-});
-const updateContactSchema = joi.object({
-  name: joi.string().min(3).max(30),
-  email: joi.string().email(),
-  phone: joi.string().min(9).max(15),
+  email: joi
+    .string()
+    .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } })
+    .required(),
+  phone: joi
+    .string()
+    .length(10)
+    .pattern(/^[0-9]+$/)
+    .required(),
 });
 
 function validateContact(req, res, next) {
-  const { error } =
-    req.method === 'POST'
-      ? addContactSchema.validate(req.body)
-      : updateContactSchema.validate(req.body);
+  const { error } = contactSchema.validate(req.body);
 
   if (error) {
     return res.status(400).json({
@@ -47,7 +46,7 @@ router.get('/:contactId', async (req, res, next) => {
 
     const contact = await contacts.getContactById(contactId);
 
-    if (contact.length === 0) {
+    if (contact == null) {
       return res.status(404).json({
         message: 'Not found',
       });
@@ -68,7 +67,7 @@ router.post('/', validateContact, async (req, res, next) => {
     }
 
     const contact = {
-      id: nanoid(),
+      id: `ID-${phone}`,
       name,
       email,
       phone,

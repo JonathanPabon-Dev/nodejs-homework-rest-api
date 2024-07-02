@@ -1,72 +1,60 @@
-const fs = require('fs/promises');
-const path = require('node:path');
-
-const contactsPath = path.join(__dirname, 'contacts.json');
+const contactSchema = require('../db/schemas');
 
 const listContacts = async () => {
   try {
-    const data = await fs.readFile(contactsPath, 'utf-8');
-    const contacts = JSON.parse(data);
+    const contacts = await contactSchema.find();
 
     return contacts;
   } catch (err) {
-    console.error(err, 'An error happened!');
+    console.error(err, 'An error happened! (list contacts)');
     throw err;
   }
 };
 
 const getContactById = async contactId => {
   try {
-    const data = await fs.readFile(contactsPath, 'utf-8');
-    const contacts = JSON.parse(data);
-    const contact = contacts.filter(contact => contact.id === contactId);
+    const contact = await contactSchema.findById(contactId).exec();
 
     return contact;
   } catch (err) {
-    console.error(err, 'An error happened!');
+    console.error(err, 'An error happened! (get contact by id)');
     throw err;
   }
 };
 
 const removeContact = async contactId => {
   try {
-    const data = await fs.readFile(contactsPath, 'utf-8');
-    const contacts = JSON.parse(data);
-    const newContacts = contacts.filter(contact => contact.id !== contactId);
-
-    await fs.writeFile(contactsPath, JSON.stringify(newContacts, null, 2));
+    await contactSchema.findByIdAndDelete(contactId);
   } catch (err) {
-    console.error(err, 'An error happened!');
+    console.error(err, 'An error happened! (remove contact)');
     throw err;
   }
 };
 
 const addContact = async body => {
   try {
-    const data = await fs.readFile(contactsPath, 'utf-8');
-    const contacts = JSON.parse(data);
-    contacts.push(body);
-
-    await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
+    const newContact = await contactSchema.create({ ...body, favorite: false });
+    return { newContact, status: 200 };
   } catch (err) {
-    console.error(err, 'An error happened!');
+    console.error(err, 'An error happened! (add contact)');
     throw err;
   }
 };
 
 const updateContact = async (contactId, body) => {
   try {
-    const data = await fs.readFile(contactsPath, 'utf-8');
-    const contacts = JSON.parse(data);
-    const contact = contacts.find(contact => contact.id === contactId);
-
-    contact.name = body.name != null ? body.name : contact.name;
-    contact.email = body.email != null ? body.email : contact.email;
-    contact.phone = body.phone != null ? body.phone : contact.phone;
-
-    await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
+    return await contactSchema.findByIdAndUpdate(contactId, body).exec();
   } catch (err) {
-    console.error(err, 'An error happened!');
+    console.error(err, 'An error happened! (update contact)');
+    throw err;
+  }
+};
+
+const updateFavoriteStatus = async (contactId, body) => {
+  try {
+    return await contactSchema.findByIdAndUpdate(contactId, body).exec();
+  } catch (err) {
+    console.error(err, 'An error happened! (update favorite status)');
     throw err;
   }
 };
@@ -77,4 +65,5 @@ module.exports = {
   removeContact,
   addContact,
   updateContact,
+  updateFavoriteStatus,
 };
